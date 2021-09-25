@@ -2,18 +2,21 @@ package com.bootcamp.dio.todolist.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.opengl.Visibility
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bootcamp.dio.todolist.databinding.ActivityMainBinding
-import com.bootcamp.dio.todolist.datasource.TaskDataSource
+import com.bootcamp.dio.todolist.viewmodel.TaskViewModel
 
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private val taskAdapter by lazy { TaskAdapterList() }
+
+    private val viewModel by lazy { TaskViewModel(application) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,35 +31,35 @@ class MainActivity : AppCompatActivity() {
 
     private fun insertListerners() {
         binding.fabCreateTask.setOnClickListener {
-            startActivityForResult(Intent(this, AddTaskActivity::class.java), CREATE_NEW_TASK)
+            onActivityResult.launch(Intent(this, AddTaskActivity::class.java))
         }
 
-        taskAdapter.listenerEdit = {
+        taskAdapter.listenerEdit = { task ->
             val intent = Intent(this, AddTaskActivity::class.java)
-            intent.putExtra(AddTaskActivity.TASK_ID, it.id)
-            startActivityForResult(intent, CREATE_NEW_TASK)
+            intent.putExtra(AddTaskActivity.TASK_ID, task.id)
+            onActivityResult.launch(Intent(intent))
+
         }
 
-        taskAdapter.listenerDelete = {
-            TaskDataSource.removeTask(it)
+        taskAdapter.listenerDelete = { task ->
+            // TaskDataSource.removeTask(it)
+
+            viewModel.delete(task)
+
             updateList()
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CREATE_NEW_TASK && resultCode == Activity.RESULT_OK) updateList()
+    private val onActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) updateList()
     }
 
     private fun updateList() {
-        val list = TaskDataSource.getList()
-        binding.includeEmpty.emptyState.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
 
-        taskAdapter.submitList(list)
+        viewModel.getAll().observe(this, Observer { list ->
+            binding.includeEmpty.emptyState.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+            taskAdapter.submitList(list)
+        })
 
-    }
-
-    companion object {
-        private const val CREATE_NEW_TASK = 1000
     }
 }
