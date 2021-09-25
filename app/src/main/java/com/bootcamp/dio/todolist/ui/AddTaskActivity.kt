@@ -2,13 +2,12 @@ package com.bootcamp.dio.todolist.ui
 
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.bootcamp.dio.todolist.databinding.ActivityAddTaskBinding
-import com.bootcamp.dio.todolist.datasource.TaskDataSource
 import com.bootcamp.dio.todolist.extensions.format
 import com.bootcamp.dio.todolist.extensions.text
 import com.bootcamp.dio.todolist.model.Task
+import com.bootcamp.dio.todolist.viewmodel.TaskViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -18,20 +17,33 @@ class AddTaskActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityAddTaskBinding.inflate(layoutInflater) }
 
+    private val viewModel by lazy { TaskViewModel(application) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+//        if (intent.hasExtra(TASK_ID)) {
+//            val taskId = intent.getIntExtra(TASK_ID, 0)
+//
+//            TaskDataSource.findById(taskId)?.let {
+//                binding.tilTitle.text = it.title
+//                binding.tilDescription.text = it.description
+//                binding.tilDate.text = it.date
+//                binding.tilTime.text = it.time
+//            }
+//        }
+
         if (intent.hasExtra(TASK_ID)) {
             val taskId = intent.getIntExtra(TASK_ID, 0)
-            TaskDataSource.findById(taskId)?.let {
+
+            viewModel.findById(taskId).observe(this, androidx.lifecycle.Observer {
                 binding.tilTitle.text = it.title
                 binding.tilDescription.text = it.description
                 binding.tilDate.text = it.date
                 binding.tilTime.text = it.time
-            }
+            })
         }
-
         insertDateAndHourListerner()
     }
 
@@ -60,18 +72,27 @@ class AddTaskActivity : AppCompatActivity() {
             timePicker.show(supportFragmentManager, null)
         }
 
-        binding.btnCancelTask.setOnClickListener {finish()}
+        binding.btnCancelTask.setOnClickListener { finish() }
 
         binding.btnNewTask.setOnClickListener {
+            val currentId = intent.getIntExtra(TASK_ID, 0)
+
             val task = Task(
                 title = binding.tilTitle.text,
                 description = binding.tilDescription.text,
                 date = binding.tilDate.text,
                 time = binding.tilTime.text,
-                id = intent.getIntExtra(TASK_ID, 0)
+                id = currentId
             )
 
-            TaskDataSource.insertTask(task)
+            if (currentId > 0) {
+                viewModel.editTask(task)
+            } else {
+                viewModel.addTask(task)
+
+            }
+
+            // TaskDataSource.insertTask(task)
 
             setResult(Activity.RESULT_OK)
             finish()
