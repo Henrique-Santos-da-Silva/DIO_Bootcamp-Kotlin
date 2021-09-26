@@ -1,6 +1,6 @@
 # DIO Bootcamp Kotlin
 > O objetivo do projeto é colocar em prática alguns dos conceitos apresentado durante o Bootcamp da Digital Innovation One, utlizando a linguagem de programação(Kotlin) e padrões de desenvolvimento do Google. </br></br>
-> **Obs:** O projeto possuí duas Branches, a `main`, na qual tem o projeto seguido durante o Bootcamp, e a `todo-room-mvvm`, que possui a resolução do desafio proposto, utilizando **Room** e **MVVM**.
+> **Obs:** O projeto possuí duas Branches, a `main`, na qual tem o projeto seguido durante o Bootcamp, e a `todo-room-mvvm`, que possui a resolução do desafio proposto, utilizando [Room](https://developer.android.com/training/data-storage/room) e uma simples implementação da arquitetura [MVVM](https://developer.android.com/jetpack/guide).
 
 ## Projeto
 <div>
